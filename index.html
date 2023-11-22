@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .bg-red {
+        background-color: rgb(246, 137, 137);
+      }
+      .bg-yellow {
+        background-color: rgb(255, 248, 48);
+      }
+      .bg-blue {
+        background-color: rgb(22, 37, 255);
+      }
+    </style>
+  </head>
+  <body>
+    <button class="bg-red" id="button">Send message</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      const button = document.querySelector("#button");
+      button.addEventListener("click§", () => {
+        socket.emit("buttonOnclick", "button click");
+      });
+    </script>
+  </body>
+</html>
