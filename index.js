@@ -2,27 +2,55 @@ const express = require("express");
 const http = require("http");
 const socket = require("socket.io");
 const path = require("path");
+const five = require("johnny-five");
+const {
+    SERVER_RUNNING_MESSAGE,
+    SERVER_SOCKET_CONNECTED_MESSAGE,
+} = require("./src/constants");
+const { initBoard } = require("./src/utils");
 
-const app = express();
-const server = http.createServer(app);
-const io = new socket.Server(server);
+async function main() {
+    const app = express();
+    const server = http.createServer(app);
+    const io = new socket.Server(server);
 
-app.get("/", (req, res) => {
-  res.status(200).sendFile(path.join(__dirname, "index.html"));
-});
+    await initBoard({ repl: false });
 
-io.on("connect", (socket) => {
-  console.log("socket connected");
+    const led = new five.Led({
+        pin: 11,
+    });
 
-  socket.on("buttonOnclick", (message) => {
-    console.log(message);
-  });
-});
+    app.get("/", (_, res) => {
+        res.status(200).sendFile(path.join(__dirname, "index.html"));
+    });
 
-io.on("connect_error", (err) => {
-  console.log(`connect_error due to ${err.message}`);
-});
+    app.get("/client.js", (_, res) => {
+        res.status(200)
+            .type("application/javascript")
+            .sendFile(path.join(__dirname, "public/client.js"));
+    });
 
-server.listen(3000, () => {
-  console.log("Hello from server");
-});
+    app.get("/style.css", (_, res) => {
+        res.status(200).sendFile(path.join(__dirname, "public/style.css"));
+    });
+
+    io.on("connect", (socket) => {
+        console.log(SERVER_SOCKET_CONNECTED_MESSAGE);
+
+        socket.on("buttonOnclick", () => {
+            if (led.isOn) {
+                led.off();
+                socket.emit("buttonOnclick", 1);
+            } else {
+                led.on();
+                socket.emit("buttonOnclick", 0);
+            }
+        });
+    });
+
+    server.listen(process.env.PORT ?? 3000, () => {
+        console.log(SERVER_RUNNING_MESSAGE);
+    });
+}
+
+main();
